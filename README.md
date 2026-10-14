@@ -72,7 +72,7 @@ Seeders are idempotent: existing pages, sections and menus are not overwritten, 
 
 | Role | Access |
 | --- | --- |
-| `super_admin` | Everything (bypasses permission checks through Shield) |
+| `super_admin` | Everything, including Users & Access → Users and Roles (bypasses permission checks through Shield) |
 | `admin` | All resources and settings; no Roles, Users or Activity |
 | `booking_agent` | Read-only cars. Booking and contact-message permissions are added in Milestone 6, when those resources exist. |
 
