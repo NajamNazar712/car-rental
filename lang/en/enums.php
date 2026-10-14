@@ -20,6 +20,10 @@ return [
         'per_day' => 'Per day',
         'per_booking' => 'Per booking',
     ],
+    'MenuLocation' => [
+        'header' => 'Header',
+        'footer' => 'Footer',
+    ],
     'BookingStatus' => [
         'new' => 'New',
         'contacted' => 'Contacted',

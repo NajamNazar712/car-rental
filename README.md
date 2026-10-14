@@ -1,58 +1,110 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Car Rental Website + Admin Panel
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Laravel 13 + Filament 5 car rental site. The full requirements are in [car-rental-build-spec.md](car-rental-build-spec.md).
 
-## About Laravel
+**Status:** Milestones 1–3 are done (setup, fleet backend, content system). The public pages (Milestone 4 onward) are not built yet.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Layer | Version / package |
+| --- | --- |
+| PHP | 8.3+ (Composer platform pinned to 8.3.0 so the lockfile works on 8.3 hosts) |
+| Laravel | 13.x |
+| Admin | Filament 5.10 at `/admin` |
+| Frontend | Blade + Tailwind CSS 4 (Vite) + Alpine.js |
+| Media | spatie/laravel-medialibrary 11 + Filament media plugin |
+| Settings | spatie/laravel-settings 3 + Filament settings plugin |
+| Translations | spatie/laravel-translatable 6 (no Filament plugin, see below) |
+| Roles | spatie/laravel-permission 8 + bezhansalleh/filament-shield 4 |
+| Other | spatie activitylog 4, sitemap 8, backup 10 |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Local setup (Laragon / Windows)
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+composer install
+npm install
+cp .env.example .env        # then edit DB_* and ADMIN_* values
+php artisan key:generate
+php artisan storage:link
+php artisan migrate --seed  # essentials + demo data (demo data is skipped when APP_ENV=production)
+npm run build               # or: npm run dev
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+- Database: MySQL `car_rental`, user `root`, no password (Laragon default).
+- Open `APP_URL` (e.g. `http://rental-service.test` after clicking Laragon → Reload, or `php artisan serve`).
+- `APP_URL` must match the address you browse with, or uploaded images will not load.
+- Admin: `/admin`. The super admin comes from `ADMIN_EMAIL` / `ADMIN_PASSWORD` in `.env`.
+- Demo staff accounts (from `StaffDemoSeeder`, not created in production):
+  - `manager@carrental.test` / `Manager@12345` has the `admin` role.
+  - `agent@carrental.test` / `Agent@12345` has the `booking_agent` role.
 
-## Contributing
+### Seeders
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Seeder | Contents | Production |
+| --- | --- | --- |
+| `EssentialSeeder` | Roles and permissions, super admin, CMS pages and sections, header/footer menus | Yes: `php artisan db:seed --class=EssentialSeeder --force` |
+| `DemoSeeder` | 6 categories, 8 brands with models, 12 features, 12 cars with images, 4 services, 6 testimonials, 10 FAQs, demo staff | No |
 
-## Code of Conduct
+Default settings are created by the settings migration in `database/settings/`, not by a seeder.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Seeders are idempotent: existing pages, sections and menus are not overwritten, so admin edits survive re-seeding. Placeholder images are generated locally with GD; nothing is hotlinked.
 
-## Security Vulnerabilities
+## Content model
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- **Translatable columns** are JSON (`{"en": "..."}`) via `spatie/laravel-translatable`.
+  - `App\Models\Concerns\HasLocalizedTranslations` makes `toArray()` return the current-locale value.
+  - That is what lets Filament forms edit translations per locale without a translatable plugin.
+- **Page sections**:
+  - `page_sections.content` is locale-keyed JSON.
+  - Read a value with `$section->get('heading')`, which falls back to `en`.
+  - Admin forms edit `localized_content`, which reads and writes `content[app()->getLocale()]`.
+- **Section types**:
+  - Each type's admin form lives in `app/Content/SectionTypes/*`.
+  - `app/Content/SectionTypeRegistry.php` maps each `type` to its form class.
+  - The public view for a type is `resources/views/components/sections/{type}.blade.php` (`_` becomes `-`). Types without a view yet render a generic fallback.
+- **Section images** use one ordered `images` media collection per section:
+  - Hero: image *n* belongs to slide *n*.
+  - CTA and intro: the first image.
+  - Gallery: all images.
+- **Pages and sections are fixed.** Admins edit content, visibility and order but cannot create or delete them, because each section type needs matching Blade code.
 
-## License
+## Roles
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+| Role | Access |
+| --- | --- |
+| `super_admin` | Everything (bypasses permission checks through Shield) |
+| `admin` | All resources and settings; no Roles, Users or Activity |
+| `booking_agent` | Read-only cars. Booking and contact-message permissions are added in Milestone 6, when those resources exist. |
+
+Permissions are regenerated and assigned by `RoleSeeder`. Re-run it after adding new resources:
+
+```bash
+php artisan db:seed --class=RoleSeeder --force
+```
+
+## Decisions and defaults
+
+- **Filament translatable plugin is not installed.**
+  - `filament/spatie-laravel-translatable-plugin` stops at Filament v3 and cannot be installed with Filament 5.
+  - Agreed approach: keep the JSON translatable columns and add a translatable plugin (e.g. `lara-zeus/spatie-translatable`) in Phase 2.
+- **activitylog is v4.12, not v5.** v5 requires PHP 8.4; v4.12 supports Laravel 13 on PHP 8.3.
+- **Pest and automated tests were skipped** at the owner's request. Milestones were verified with smoke checks instead.
+- **Laravel Boost** (suggested by the skeleton's `CLAUDE.md` / `AGENTS.md`) was not installed because it is not in the spec.
+- **Currency:** AED, editable in Admin → Settings → General.
+- **Default phone country code:** `+971`, editable in Settings → General.
+- **Brand colours:** CSS variables at the top of `resources/css/app.css`. The admin primary colour is in Settings → General.
+- **Fonts:** Inter + Manrope from Google Fonts (Latin + Cyrillic). The RTL font hook is marked in `resources/views/layouts/app.blade.php` and `app.css`.
+- **Logos and favicon:** stored as file paths (public disk, `branding/`) on `GeneralSettings`.
+- **Turnstile secret key:** stored encrypted in settings.
+- **Settings:** cached (`SETTINGS_CACHE_ENABLED=true`), refreshed automatically on save, and every save is written to the activity log (`log_name = settings`).
+- **Menus:** cached forever and cleared whenever a menu item is saved or deleted.
+- **Media conversions:** queued (`QUEUE_CONVERSIONS_BY_DEFAULT`), so run `php artisan queue:work`. Without a worker, uploaded images show originals until the conversions are processed. Seeders generate conversions synchronously.
+- **Cars:** Duplicate creates an inactive copy with a `-copy-xxxx` slug, plus the same features and images.
+- **Lookup records:** a category, brand or model used by any car (including trashed cars) cannot be deleted. Bulk delete skips records that are in use.
+
+## Open items
+
+- Exact inner pages: About, Services, FAQ/Terms and Contact are seeded. Add or remove menu entries in Admin → Website Content → Menus.
+- Final brand colours, logo and favicon.
+- Real contact details, WhatsApp numbers and notification recipients (placeholders are seeded).
+- Legal text for the Privacy and Terms pages (placeholders are seeded).

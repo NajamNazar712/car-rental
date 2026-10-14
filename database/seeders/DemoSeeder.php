@@ -7,7 +7,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 
 /**
- * Demo content (fleet, testimonials, FAQs...). Never required in production.
+ * Demo content (fleet, services, testimonials, FAQs, staff users). Never required in production.
  */
 final class DemoSeeder extends Seeder
 {
@@ -15,6 +15,8 @@ final class DemoSeeder extends Seeder
     {
         $this->call([
             FleetDemoSeeder::class,
+            ContentDemoSeeder::class,
+            StaffDemoSeeder::class,
         ]);
     }
 }

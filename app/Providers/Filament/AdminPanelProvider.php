@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Support\Branding;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -31,9 +32,13 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->passwordReset()
             ->profile(isSimple: false)
-            ->brandName(config('app.name'))
-            ->colors([
-                'primary' => Color::hex('#0f4c81'),
+            ->brandName(fn (): string => Branding::siteName())
+            ->brandLogo(fn (): ?string => Branding::logoUrl())
+            ->darkModeBrandLogo(fn (): ?string => Branding::logoUrl(dark: true))
+            ->brandLogoHeight('2.25rem')
+            ->favicon(fn (): ?string => Branding::faviconUrl())
+            ->colors(fn (): array => [
+                'primary' => Color::hex(Branding::primaryColor()),
             ])
             ->navigationGroups([
                 NavigationGroup::make('Fleet'),
