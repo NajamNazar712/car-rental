@@ -13,6 +13,8 @@ final class DemoSeeder extends Seeder
 {
     public function run(): void
     {
-        //
+        $this->call([
+            FleetDemoSeeder::class,
+        ]);
     }
 }
