@@ -12,6 +12,9 @@ use Filament\Support\Icons\Heroicon;
 
 class ManageBookingSettings extends BaseSettingsPage
 {
+    /** Hidden from navigation (scope change). Code and stored settings are kept. */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
 
     protected static ?string $navigationLabel = 'Booking';

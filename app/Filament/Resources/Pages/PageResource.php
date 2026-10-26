@@ -26,6 +26,9 @@ class PageResource extends Resource
 {
     protected static ?string $model = Page::class;
 
+    /** Hidden from navigation: website content is static (scope change). Code, routes and data are kept. */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
     protected static string|UnitEnum|null $navigationGroup = 'Website Content';

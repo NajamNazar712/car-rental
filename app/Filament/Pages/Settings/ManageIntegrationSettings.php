@@ -11,6 +11,9 @@ use Filament\Support\Icons\Heroicon;
 
 class ManageIntegrationSettings extends BaseSettingsPage
 {
+    /** Hidden from navigation (scope change). Code and stored settings are kept. */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPuzzlePiece;
 
     protected static ?string $navigationLabel = 'Integrations';

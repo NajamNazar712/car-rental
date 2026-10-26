@@ -26,6 +26,9 @@ class MenuItemResource extends Resource
 {
     protected static ?string $model = MenuItem::class;
 
+    /** Hidden from navigation: website content is static (scope change). Code, routes and data are kept. */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBars3;
 
     protected static string|UnitEnum|null $navigationGroup = 'Website Content';
