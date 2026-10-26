@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Testimonials;
 
+use App\Filament\Concerns\SuperAdminOnly;
 use App\Filament\Resources\Testimonials\Pages\ManageTestimonials;
 use App\Filament\Support\Translatable;
 use App\Models\Testimonial;
@@ -27,10 +28,10 @@ use UnitEnum;
 
 class TestimonialResource extends Resource
 {
-    protected static ?string $model = Testimonial::class;
+    /** Super admins only: kept in code, not offered to the client (static website content). */
+    use SuperAdminOnly;
 
-    /** Hidden from navigation: website content is static (scope change). Code, routes and data are kept. */
-    protected static bool $shouldRegisterNavigation = false;
+    protected static ?string $model = Testimonial::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChatBubbleBottomCenterText;
 

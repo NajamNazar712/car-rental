@@ -19,13 +19,11 @@ class User extends Authenticatable implements FilamentUser
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasRoles, Notifiable;
 
+    /**
+     * The only hardcoded role: vendor/maintenance tier, bypasses all permission checks.
+     * Every other role is created and managed in Users & Access → Roles.
+     */
     public const ROLE_SUPER_ADMIN = 'super_admin';
-
-    public const ROLE_ADMIN = 'admin';
-
-    public const ROLE_BOOKING_AGENT = 'booking_agent';
-
-    public const PANEL_ROLES = [self::ROLE_SUPER_ADMIN, self::ROLE_ADMIN, self::ROLE_BOOKING_AGENT];
 
     /**
      * @return array<string, string>
@@ -41,6 +39,20 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->is_active && $this->hasAnyRole(self::PANEL_ROLES);
+        // Any role grants panel access (built-in or client-created); what users see is governed by permissions.
+        return $this->is_active && $this->roles()->exists();
+    }
+
+    /** Vendor/maintenance tier. Hidden from client admins in Users and Roles. */
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole(self::ROLE_SUPER_ADMIN);
+    }
+
+    public static function currentIsSuperAdmin(): bool
+    {
+        $user = auth()->user();
+
+        return $user instanceof self && $user->isSuperAdmin();
     }
 }

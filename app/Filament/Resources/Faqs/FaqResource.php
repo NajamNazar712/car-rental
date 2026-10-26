@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Faqs;
 
 use App\Content\SectionTypes\Fields;
+use App\Filament\Concerns\SuperAdminOnly;
 use App\Filament\Resources\Faqs\Pages\ManageFaqs;
 use App\Filament\Support\Translatable;
 use App\Models\Faq;
@@ -25,10 +26,10 @@ use UnitEnum;
 
 class FaqResource extends Resource
 {
-    protected static ?string $model = Faq::class;
+    /** Super admins only: kept in code, not offered to the client (static website content). */
+    use SuperAdminOnly;
 
-    /** Hidden from navigation: website content is static (scope change). Code, routes and data are kept. */
-    protected static bool $shouldRegisterNavigation = false;
+    protected static ?string $model = Faq::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedQuestionMarkCircle;
 

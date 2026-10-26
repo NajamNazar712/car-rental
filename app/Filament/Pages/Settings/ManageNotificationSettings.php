@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages\Settings;
 
+use App\Filament\Concerns\SuperAdminOnly;
 use App\Settings\NotificationSettings;
 use BackedEnum;
 use Filament\Forms\Components\TagsInput;
@@ -12,8 +13,8 @@ use Filament\Support\Icons\Heroicon;
 
 class ManageNotificationSettings extends BaseSettingsPage
 {
-    /** Hidden from navigation (scope change). Code and stored settings are kept. */
-    protected static bool $shouldRegisterNavigation = false;
+    /** Super admins only: kept in code, not offered to the client (static website content). */
+    use SuperAdminOnly;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBell;
 

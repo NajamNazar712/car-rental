@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Pages;
 
+use App\Filament\Concerns\SuperAdminOnly;
 use App\Filament\Resources\Pages\Pages\EditPage;
 use App\Filament\Resources\Pages\Pages\ListPages;
 use App\Filament\Resources\Pages\RelationManagers\SectionsRelationManager;
@@ -24,10 +25,10 @@ use UnitEnum;
  */
 class PageResource extends Resource
 {
-    protected static ?string $model = Page::class;
+    /** Super admins only: kept in code, not offered to the client (static website content). */
+    use SuperAdminOnly;
 
-    /** Hidden from navigation: website content is static (scope change). Code, routes and data are kept. */
-    protected static bool $shouldRegisterNavigation = false;
+    protected static ?string $model = Page::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 

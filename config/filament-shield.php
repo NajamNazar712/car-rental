@@ -1,8 +1,20 @@
 <?php
 
 declare(strict_types=1);
-use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
-use Filament\Pages\Dashboard;
+use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\Settings\ManageBookingSettings;
+use App\Filament\Pages\Settings\ManageIntegrationSettings;
+use App\Filament\Pages\Settings\ManageNotificationSettings;
+use App\Filament\Resources\Faqs\FaqResource;
+use App\Filament\Resources\MenuItems\MenuItemResource;
+use App\Filament\Resources\Pages\PageResource;
+use App\Filament\Resources\Roles\RoleResource;
+use App\Filament\Resources\Services\ServiceResource;
+use App\Filament\Resources\Testimonials\TestimonialResource;
+use App\Filament\Widgets\CarsByBrandChart;
+use App\Filament\Widgets\CarsByCategoryChart;
+use App\Filament\Widgets\FleetStatsOverview;
+use App\Filament\Widgets\RecentCarsTable;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 
@@ -71,7 +83,9 @@ return [
     'super_admin' => [
         'enabled' => true,
         'name' => 'super_admin',
-        'define_via_gate' => false,
+        // Super admins pass every permission check via Gate::before, so they also reach the
+        // super-admin-only screens, which have no permissions (see resources.exclude below).
+        'define_via_gate' => true,
         'intercept_gate' => 'before',
     ],
 
@@ -194,8 +208,14 @@ return [
                 'delete',
             ],
         ],
+        // Super-admin-only features (see App\Filament\Concerns\SuperAdminOnly): no permissions are
+        // generated, so they never appear in the role editor and cannot be granted to any role.
         'exclude' => [
-            //
+            PageResource::class,
+            ServiceResource::class,
+            TestimonialResource::class,
+            FaqResource::class,
+            MenuItemResource::class,
         ],
     ],
 
@@ -215,6 +235,10 @@ return [
         'prefix' => 'view',
         'exclude' => [
             Dashboard::class,
+            // Super-admin-only settings pages (see resources.exclude above).
+            ManageNotificationSettings::class,
+            ManageIntegrationSettings::class,
+            ManageBookingSettings::class,
         ],
     ],
 
@@ -235,6 +259,11 @@ return [
         'exclude' => [
             AccountWidget::class,
             FilamentInfoWidget::class,
+            // Dashboard fleet widgets follow the role's car permission (see RequiresFleetAccess).
+            FleetStatsOverview::class,
+            CarsByCategoryChart::class,
+            CarsByBrandChart::class,
+            RecentCarsTable::class,
         ],
     ],
 

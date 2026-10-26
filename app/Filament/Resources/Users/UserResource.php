@@ -18,6 +18,7 @@ use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rules\Password;
 use UnitEnum;
 
@@ -50,7 +51,7 @@ class UserResource extends Resource
                     ->dehydrated(fn (?string $state): bool => filled($state))
                     ->helperText(fn (string $operation): ?string => $operation === 'edit' ? 'Leave empty to keep the current password.' : null),
                 Select::make('roles')
-                    ->relationship('roles', 'name', fn ($query) => $query->whereIn('name', User::PANEL_ROLES))
+                    ->relationship('roles', 'name', fn (Builder $query) => static::assignableRoles($query))
                     ->getOptionLabelFromRecordUsing(fn ($record): string => str($record->name)->replace('_', ' ')->title())
                     ->multiple()
                     ->maxItems(1)
@@ -82,7 +83,9 @@ class UserResource extends Resource
                 TextColumn::make('created_at')->date()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('roles')->relationship('roles', 'name')->preload(),
+                SelectFilter::make('roles')
+                    ->relationship('roles', 'name', fn (Builder $query) => static::assignableRoles($query))
+                    ->preload(),
                 TernaryFilter::make('is_active')->label('Active'),
             ])
             ->recordActions([
@@ -96,5 +99,25 @@ class UserResource extends Resource
         return [
             'index' => ManageUsers::route('/'),
         ];
+    }
+
+    /** Client admins never see super admin accounts (so they cannot edit, disable or delete them). */
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (! User::currentIsSuperAdmin()) {
+            $query->whereDoesntHave('roles', fn (Builder $q) => $q->where('name', User::ROLE_SUPER_ADMIN));
+        }
+
+        return $query;
+    }
+
+    /** All roles (including client-created ones); super_admin only for super admins. */
+    private static function assignableRoles(Builder $query): Builder
+    {
+        return User::currentIsSuperAdmin()
+            ? $query
+            : $query->where('name', '!=', User::ROLE_SUPER_ADMIN);
     }
 }

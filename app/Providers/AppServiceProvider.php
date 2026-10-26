@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Content\SectionTypeRegistry;
+use App\Filament\Resources\Roles\RoleResource;
 use App\Policies\RolePolicy;
 use App\Support\Branding;
 use Illuminate\Support\Facades\Event;
@@ -23,6 +24,10 @@ class AppServiceProvider extends ServiceProvider
     {
         // Vendor models are outside policy auto-discovery.
         Gate::policy(Role::class, RolePolicy::class);
+
+        // Last line of defence for every delete path (buttons, bulk actions, code): never delete
+        // super_admin or a role that still has users, which would leave them unable to log in.
+        Role::deleting(fn (Role $role): bool => RoleResource::isDeletable($role));
 
         // Audit trail for settings changes (spatie/laravel-settings refreshes its own cache on save).
         Event::listen(SettingsSaved::class, function (SettingsSaved $event): void {

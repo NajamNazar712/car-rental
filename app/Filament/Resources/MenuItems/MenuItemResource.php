@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\MenuItems;
 
 use App\Enums\MenuLocation;
+use App\Filament\Concerns\SuperAdminOnly;
 use App\Filament\Resources\MenuItems\Pages\ManageMenuItems;
 use App\Models\MenuItem;
 use BackedEnum;
@@ -24,10 +25,10 @@ use UnitEnum;
 
 class MenuItemResource extends Resource
 {
-    protected static ?string $model = MenuItem::class;
+    /** Super admins only: kept in code, not offered to the client (static website content). */
+    use SuperAdminOnly;
 
-    /** Hidden from navigation: website content is static (scope change). Code, routes and data are kept. */
-    protected static bool $shouldRegisterNavigation = false;
+    protected static ?string $model = MenuItem::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBars3;
 

@@ -34,9 +34,9 @@ npm run build               # or: npm run dev
 - Open `APP_URL` (e.g. `http://rental-service.test` after clicking Laragon → Reload, or `php artisan serve`).
 - `APP_URL` must match the address you browse with, or uploaded images will not load.
 - Admin: `/admin`. The super admin comes from `ADMIN_EMAIL` / `ADMIN_PASSWORD` in `.env`.
-- Demo staff accounts (from `StaffDemoSeeder`, not created in production):
+- Demo staff account (from `StaffDemoSeeder`, not created in production):
   - `manager@carrental.test` / `Manager@12345` has the `admin` role.
-  - `agent@carrental.test` / `Agent@12345` has the `booking_agent` role.
+  - It only sees what the `admin` role has been granted in Users & Access → Roles.
 
 ### Seeders
 
@@ -72,15 +72,48 @@ Seeders are idempotent: existing pages, sections and menus are not overwritten, 
 
 | Role | Access |
 | --- | --- |
-| `super_admin` | Everything, including Users & Access → Users and Roles (bypasses permission checks through Shield) |
-| `admin` | All resources and settings; no Roles, Users or Activity |
-| `booking_agent` | Read-only cars. Booking and contact-message permissions are added in Milestone 6, when those resources exist. |
+| `super_admin` | Vendor/maintenance tier. Everything, including the super-admin-only screens below (bypasses permission checks through Shield). Hidden from client admins. |
+| `admin` | Client admin. Has whatever permissions a super admin grants it in the Roles screen. Cannot see super admins or the `super_admin` role, and cannot edit its own `admin` role. |
+| Other roles | Created in the Roles screen (e.g. a booking agent role). Any role grants panel access; what the user sees depends only on the role's permissions. |
 
-Permissions are regenerated and assigned by `RoleSeeder`. Re-run it after adding new resources:
+Only the built-in roles (`super_admin`, `admin`) always exist and cannot be deleted.
+
+### Super-admin-only screens
+
+The website content is static for the client, so these screens are kept in code (with their routes, models,
+tables and data) but are only available to super admins:
+
+- Website Content: Pages (with sections), Services, Testimonials, FAQs, Menus
+- Settings: Notifications, Integrations, Booking
+
+How it works:
+
+- Each class uses `App\Filament\Concerns\SuperAdminOnly`, which hides it from the menu and blocks URL access for everyone else.
+- They are listed in the `exclude` arrays of `config/filament-shield.php`, so no permissions exist for them. They never appear in the role editor and cannot be granted to any role.
+- `RoleSeeder` deletes any leftover permissions for excluded screens.
+
+To offer one to the client again:
+
+1. Remove the trait from its class.
+2. Remove its entry from the Shield `exclude` arrays.
+3. Re-run the role seeder.
+4. Grant the new permissions to the roles that need them in Users & Access → Roles.
+
+### Role seeder
+
+`RoleSeeder` never assigns permissions to any role. It only:
+
+- creates permissions for every admin screen;
+- deletes permissions of super-admin-only screens;
+- makes sure the built-in roles exist.
+
+Re-run it after adding or re-enabling admin screens, then grant permissions manually in the Roles screen:
 
 ```bash
 php artisan db:seed --class=RoleSeeder --force
 ```
+
+> **Fresh install:** the `admin` role starts with no permissions. Log in as super admin and grant them in the Roles screen before handing over.
 
 ## Decisions and defaults
 

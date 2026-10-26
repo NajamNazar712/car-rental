@@ -7,7 +7,8 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 
 /**
- * Demo content (fleet, services, testimonials, FAQs, staff users). Never required in production.
+ * Demo content (fleet, services, testimonials, FAQs). Never required in production.
+ * Staff users and their roles are created manually in Users & Access.
  */
 final class DemoSeeder extends Seeder
 {
@@ -16,7 +17,6 @@ final class DemoSeeder extends Seeder
         $this->call([
             FleetDemoSeeder::class,
             ContentDemoSeeder::class,
-            StaffDemoSeeder::class,
         ]);
     }
 }
